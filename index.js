@@ -16,10 +16,15 @@ var client = new Twitter({
 // var query = { track: '' };
 // var trend_list = [];
 var trend = '';
+var streamList = [];
 
 const setStream = (trend) => {
     console.log('setting stream');
     const query = { track: trend };
+    if(streamList.length > 0){
+        streamList.forEach(s => s.destory());
+        console.log('destoryed stream');
+    }
     return new Promise((resolve) => {
         const stream = client.stream('statuses/filter', query)
             .on('data', (data) => {
@@ -60,6 +65,7 @@ const setStream = (trend) => {
             .on('end', () => {
                 console.log('end streaming');
             });
+        streamList.push(stream);
         resolve(stream);
     });
 }
@@ -102,7 +108,9 @@ const interval = setInterval(method, 600000);
 // Connection
 io.on('connection', (socket) => {
     // 接続した人にだけtrend情報を渡す
-    io.to(socket.id).emit('quack-get-trend', { name: trend });
+    const id = socket.id;
+    console.log('new member',id);
+    io.to(id).emit('quack-get-trend', { name: trend });
 });
 http.listen(port, () => {
     console.log('listening on *:' + port);
